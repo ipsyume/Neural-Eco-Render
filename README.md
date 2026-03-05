@@ -1,4 +1,4 @@
-# NeuralEcoRender
+# Neural Eco Render
 
 NeuralEcoRender is a deep learning system that reconstructs high-quality rendered frames from low-sample inputs while estimating rendering cost, energy consumption, and CO₂ emissions.
 
