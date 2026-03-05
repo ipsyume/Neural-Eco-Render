@@ -48,3 +48,12 @@ python app.py
 Then open:
 
 http://127.0.0.1:5000
+
+<img width="1919" height="960" alt="image" src="https://github.com/user-attachments/assets/d377832c-38ef-420b-a94c-85cb51fdc5eb" />
+<img width="1911" height="965" alt="image" src="https://github.com/user-attachments/assets/18982da9-8abc-4592-b7ef-f65acc32365f" />
+<img width="1919" height="888" alt="image" src="https://github.com/user-attachments/assets/887d0674-756a-4936-9921-ae463d993f54" />
+<img width="1444" height="943" alt="image" src="https://github.com/user-attachments/assets/d3b8977d-ceca-435a-9cb1-05140cb21fb0" />
+
+
+
+
