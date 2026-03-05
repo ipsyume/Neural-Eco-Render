@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Eco-Renderer Prototype</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Neural network canvas background -->
+<canvas id="neuralBg"></canvas>
+
+<!-- Mouse glow follower -->
+<div id="mouseGlow"></div>
+
+<div class="app-container">
+
+  <!-- =============================== -->
+  <!-- HEADER                          -->
+  <!-- =============================== -->
+  <h1>Neural Eco-Renderer</h1>
+  <div class="tiny-label">Neural Model v0.3 &nbsp;·&nbsp; Prototype &nbsp;·&nbsp; Optimizing</div>
+
+  <!-- =============================== -->
+  <!-- CONTROLS                        -->
+  <!-- =============================== -->
+  <div class="controls">
+
+    <label>
+      Samples
+      <input type="range" id="samples" min="1" max="1024" value="4">
+      <span id="samplesVal" style="font-family: var(--font-mono); font-size:12px; color: var(--eco-accent); min-width:32px;">4</span>
+    </label>
+
+    <label>
+      Lighting Complexity
+      <input type="range" id="complexity" min="1" max="10" value="3">
+      <span id="complexityVal" style="font-family: var(--font-mono); font-size:12px; color: var(--eco-accent); min-width:18px;">3</span>
+    </label>
+
+    <label class="eco-switch-wrapper">
+      <span style="font-size:13px; font-weight:600;">Eco Mode</span>
+      <label class="eco-switch">
+        <input type="checkbox" id="ecoToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </label>
+
+    <label style="gap: 8px;">
+      <input type="checkbox" id="heatmapToggle">
+      <span>AI Confidence Heatmap</span>
+    </label>
+
+    <div id="aiStatus" class="ai-status">
+      ● Neural Model Active
+    </div>
+
+  </div>
+
+  <!-- =============================== -->
+  <!-- IMAGE VIEWER                    -->
+  <!-- =============================== -->
+  <div class="viewer">
+
+    <!-- LOW SAMPLES -->
+    <div class="view-card">
+      <h3>⬡ Low Samples</h3>
+      <div class="image-box">
+        <img id="lowImg" alt="Low sample render">
+      </div>
+    </div>
+
+    <!-- NEURAL ECO (CENTER) -->
+    <div class="view-card">
+      <h3>◈ Neural Eco</h3>
+
+      <!-- SVG gradient def for ring -->
+      <svg width="0" height="0" style="position:absolute;">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#00FFB2"/>
+            <stop offset="100%" stop-color="#4DFFEF"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div class="image-box">
+        <img id="ecoImg" alt="Neural eco render">
+        <img id="edgeImg" class="structure hidden" alt="">
+        <div id="scanOverlay"></div>
+        <img id="errorImg" class="error hidden" alt="">
+        <img id="heatmapImg" class="heatmap hidden" alt="">
+      </div>
+
+      <div class="heatmap-legend">
+        <span class="legend red"></span> Low
+        <span class="legend yellow"></span> Medium
+        <span class="legend green"></span> High Confidence
+      </div>
+
+      <p class="explain-text">
+        Confidence overlay shows where the neural renderer is most certain about pixel values.
+      </p>
+    </div>
+
+    <!-- HIGH SAMPLES -->
+    <div class="view-card">
+      <h3>◈ High Samples</h3>
+      <div class="image-box">
+        <img id="highImg" alt="High sample render">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =============================== -->
+  <!-- METRICS                         -->
+  <!-- =============================== -->
+  <div class="metrics">
+
+    <!-- STAT CARDS -->
+    <div class="stats-container">
+
+      <div class="stat-card">
+        <div class="stat-value"><span id="time">—</span></div>
+        <div class="stat-label">Render Time (ms)</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value"><span id="power">—</span></div>
+        <div class="stat-label">Power (W)</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value"><span id="energy">—</span></div>
+        <div class="stat-label">
+          Energy (J)
+          <span class="info-btn" title="Energy is estimated from render time × power usage. Lower is more efficient.">i</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value"><span id="fps">—</span></div>
+        <div class="stat-label">FPS</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-value"><span id="co2">—</span></div>
+        <div class="stat-label">
+          CO₂ (g)
+          <span class="info-btn" title="CO₂ estimate based on average electricity carbon intensity.">i</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ENERGY COMPARISON -->
+    <div class="energy-compare">
+      <h3>Energy Usage Comparison</h3>
+
+      <!-- RING -->
+      <div class="energy-ring-container">
+        <svg class="progress-ring" width="190" height="190" viewBox="0 0 190 190">
+          <defs>
+            <linearGradient id="ringGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#00FFB2"/>
+              <stop offset="100%" stop-color="#4DFFEF"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg"       cx="95" cy="95" r="70"></circle>
+          <circle id="energyRing" class="ring-progress" cx="95" cy="95" r="70"></circle>
+        </svg>
+        <div class="ring-text">
+          <span id="energyPercent">0%</span>
+          <p>Energy Saved</p>
+        </div>
+      </div>
+
+      <p id="energySavingText" class="saving-text"></p>
+
+      <!-- BARS -->
+      <div class="bar-row">
+        <span>Traditional</span>
+        <div class="bar-bg">
+          <div id="barTraditional" class="bar bar-red"></div>
+        </div>
+        <span id="energyTraditional">0 J</span>
+      </div>
+
+      <div class="bar-row">
+        <span>Neural Eco</span>
+        <div class="bar-bg">
+          <div id="barEco" class="bar bar-green"></div>
+        </div>
+        <span id="energyEco">0 J</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =============================== -->
+  <!-- CARBON PANEL                    -->
+  <!-- =============================== -->
+  <div class="carbon-panel">
+
+    <h3>🌍 Cumulative Carbon Savings</h3>
+
+    <p>Total CO₂ saved: <span id="totalCarbon">0.00000</span> g</p>
+    <p>≈ <span id="totalPhoneCharges">0</span> phone charges avoided</p>
+    <p>≈ <span id="totalYoutubeMinutes">0</span> minutes of YouTube streaming avoided</p>
+
+    <label>
+      Projected Usage
+      <input type="range" id="timeScale" min="1" max="4" value="1">
+    </label>
+
+    <p id="timeScaleLabel">1 Minute Simulation</p>
+
+    <p><strong>Projected CO₂ Saved:</strong> <span id="projectedCarbon">0.00000</span> g</p>
+
+    <button id="resetCarbon">↺ Reset Counter</button>
+
+    <h4 style="margin-bottom:10px; font-size:12px; letter-spacing:2px; text-transform:uppercase; opacity:0.5; font-weight:600; -webkit-text-fill-color: var(--text-dim); color: var(--text-dim);">Carbon Savings Over Time</h4>
+    <canvas id="carbonChart" width="600" height="180"></canvas>
+
+  </div>
+
+</div><!-- end .app-container -->
+
+<script src="/static/app.js"></script>
+</body>
+</html>
