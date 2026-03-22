@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Eco-Renderer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div id="toastArea"></div>
+
+<!-- ══════════════════════════════════
+     HEADER
+══════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-left">
+    <div class="logo-mark">NER</div>
+    <div class="header-titles">
+      <h1>Neural Eco-Renderer</h1>
+      <p class="header-sub">AI-assisted rendering · Energy analysis platform</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill" id="statusPill">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Connecting</span>
+    </div>
+    <div class="header-meta mono" id="deviceTag">—</div>
+    <button class="btn-ghost" id="exportBtn">↓ Export</button>
+  </div>
+</header>
+<div class="header-rule"></div>
+
+<!-- ══════════════════════════════════
+     LAYOUT SHELL
+══════════════════════════════════ -->
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <div class="sb-block">
+      <div class="sb-heading">Render Parameters</div>
+
+      <div class="field">
+        <div class="field-row">
+          <label class="field-label">Samples per Pixel</label>
+          <span class="field-val mono" id="samplesVal">4</span>
+        </div>
+        <input type="range" id="samples" min="1" max="1024" value="4">
+        <div class="range-ticks"><span>1</span><span>512</span><span>1024</span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-row">
+          <label class="field-label">Lighting Complexity</label>
+          <span class="field-val mono" id="complexityVal">3</span>
+        </div>
+        <input type="range" id="complexity" min="1" max="10" value="3">
+        <div class="range-ticks"><span>1</span><span>5</span><span>10</span></div>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-block">
+      <div class="sb-heading">Renderer Mode</div>
+      <div class="mode-cards">
+        <button class="mode-card" data-mode="traditional">
+          <div class="mode-card-icon">○</div>
+          <div class="mode-card-body">
+            <div class="mode-card-title">Traditional</div>
+            <div class="mode-card-desc">Full path tracing</div>
+          </div>
+        </button>
+        <button class="mode-card active" data-mode="eco">
+          <div class="mode-card-icon eco-leaf">◈</div>
+          <div class="mode-card-body">
+            <div class="mode-card-title">Neural Eco</div>
+            <div class="mode-card-desc">AI-enhanced output</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-block">
+      <div class="sb-heading">Overlays</div>
+      <div class="toggle-list">
+        <label class="toggle-item">
+          <span class="toggle-label">Confidence map</span>
+          <div class="switch"><input type="checkbox" id="heatmapToggle"><span class="track"></span></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Edge structure</span>
+          <div class="switch"><input type="checkbox" id="edgeToggle"><span class="track"></span></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Error map</span>
+          <div class="switch"><input type="checkbox" id="errorToggle"><span class="track"></span></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Auto-play frames</span>
+          <div class="switch"><input type="checkbox" id="autoPlay" checked><span class="track"></span></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-block">
+      <div class="sb-heading">Scene</div>
+      <select id="sceneSelect" class="scene-select">
+        <option>Loading…</option>
+      </select>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-block sb-shortcuts">
+      <div class="sb-heading">Shortcuts</div>
+      <div class="kb-rows">
+        <div class="kb-r"><kbd>Space</kbd><span>Play / Pause</span></div>
+        <div class="kb-r"><kbd>H</kbd><span>Heatmap</span></div>
+        <div class="kb-r"><kbd>E</kbd><span>Eco toggle</span></div>
+        <div class="kb-r"><kbd>← →</kbd><span>Frame step</span></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- VIEWER -->
+    <section class="viewer">
+
+      <div class="view-panel panel-low">
+        <div class="panel-top">
+          <span class="panel-tag">Low SPP — Input</span>
+          <div class="panel-qm mono" id="qLow">
+            <span class="qk">PSNR</span><span class="qv" id="psnrLow">—</span>
+            <span class="qk">SSIM</span><span class="qv" id="ssimLow">—</span>
+          </div>
+        </div>
+        <div class="img-frame">
+          <img id="lowImg" alt="Low sample">
+          <div class="frame-caption mono">Input render</div>
+        </div>
+      </div>
+
+      <div class="view-panel panel-eco panel-featured">
+        <div class="panel-top">
+          <span class="panel-tag tag-eco">Neural Eco — Output</span>
+          <div class="panel-qm mono" id="qEco">
+            <span class="qk">PSNR</span><span class="qv" id="psnrEco">—</span>
+            <span class="qk">SSIM</span><span class="qv" id="ssimEco">—</span>
+            <span class="qgain" id="psnrGain"></span>
+          </div>
+          <div class="infer-tag mono" id="inferTag">—</div>
+        </div>
+        <div class="img-frame img-frame-eco" id="ecoFrame">
+          <img id="ecoImg" alt="Neural eco">
+          <img id="edgeImg"    class="ol ol-edge   gone" alt="">
+          <img id="heatmapImg" class="ol ol-heat   gone" alt="">
+          <img id="errorImg"   class="ol ol-err    gone" alt="">
+          <div class="sweep-line gone" id="sweep"></div>
+        </div>
+        <div class="confidence-legend gone" id="confLegend">
+          <span class="cleg-item"><span class="cleg-dot" style="background:#ef4444"></span>Low</span>
+          <span class="cleg-item"><span class="cleg-dot" style="background:#f59e0b"></span>Medium</span>
+          <span class="cleg-item"><span class="cleg-dot" style="background:#16a34a"></span>High confidence</span>
+        </div>
+      </div>
+
+      <div class="view-panel panel-high">
+        <div class="panel-top">
+          <span class="panel-tag">High SPP — Reference</span>
+          <div class="panel-qm mono">
+            <span class="qk">Ground</span><span class="qv" style="color:var(--amber)">Truth</span>
+          </div>
+        </div>
+        <div class="img-frame">
+          <img id="highImg" alt="Reference">
+          <div class="frame-caption mono">Full-sample reference</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- METRIC ROW -->
+    <section class="metric-row">
+      <div class="metric-card">
+        <div class="metric-num" id="mFPS">—</div>
+        <div class="metric-label">frames / sec</div>
+        <canvas class="spark" id="spkFPS"></canvas>
+      </div>
+      <div class="metric-card">
+        <div class="metric-num" id="mTime">—</div>
+        <div class="metric-label">ms per frame</div>
+        <canvas class="spark" id="spkTime"></canvas>
+      </div>
+      <div class="metric-card">
+        <div class="metric-num" id="mPower">—</div>
+        <div class="metric-label">watts</div>
+        <canvas class="spark" id="spkPower"></canvas>
+      </div>
+      <div class="metric-card">
+        <div class="metric-num" id="mEnergy">—</div>
+        <div class="metric-label">joules</div>
+        <canvas class="spark" id="spkEnergy"></canvas>
+      </div>
+      <div class="metric-card">
+        <div class="metric-num" id="mCO2">—</div>
+        <div class="metric-label">g CO₂</div>
+        <canvas class="spark" id="spkCO2"></canvas>
+      </div>
+      <div class="metric-card metric-savings">
+        <div class="savings-donut">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <circle class="donut-bg"  cx="32" cy="32" r="24"/>
+            <circle class="donut-arc" cx="32" cy="32" r="24" id="donutArc"/>
+          </svg>
+          <span class="donut-pct" id="savedPct">0%</span>
+        </div>
+        <div class="metric-label">energy saved</div>
+      </div>
+    </section>
+
+    <!-- BOTTOM PANELS -->
+    <section class="bottom-row">
+
+      <!-- Energy comparison -->
+      <div class="card card-energy">
+        <div class="card-heading">Energy comparison</div>
+        <div class="ebar">
+          <span class="ebar-name">Traditional</span>
+          <div class="ebar-track"><div class="ebar-fill fill-warm" id="barTrad"></div></div>
+          <span class="ebar-num mono" id="eTrad">—</span>
+        </div>
+        <div class="ebar">
+          <span class="ebar-name">Neural Eco</span>
+          <div class="ebar-track"><div class="ebar-fill fill-eco" id="barEco"></div></div>
+          <span class="ebar-num mono" id="eEco">—</span>
+        </div>
+        <div class="savings-note" id="savingsNote"></div>
+      </div>
+
+      <!-- Carbon -->
+      <div class="card card-carbon">
+        <div class="card-heading">Cumulative carbon savings</div>
+        <div class="carbon-grid">
+          <div class="cstat">
+            <div class="cstat-num mono" id="totalCO2">0.00000</div>
+            <div class="cstat-lbl">g CO₂ saved</div>
+          </div>
+          <div class="cstat">
+            <div class="cstat-num mono" id="totalPhone">0</div>
+            <div class="cstat-lbl">phone charges avoided</div>
+          </div>
+          <div class="cstat">
+            <div class="cstat-num mono" id="totalYT">0</div>
+            <div class="cstat-lbl">YouTube minutes avoided</div>
+          </div>
+        </div>
+
+        <div class="proj-row">
+          <span class="proj-lbl">Projection</span>
+          <div class="proj-tabs">
+            <button class="proj-tab active" data-mult="1">1 min</button>
+            <button class="proj-tab" data-mult="60">1 hr</button>
+            <button class="proj-tab" data-mult="1440">1 day</button>
+            <button class="proj-tab" data-mult="525600">1 yr</button>
+          </div>
+          <span class="proj-result">→ <span class="mono" id="projCO2">0.0000</span> g</span>
+        </div>
+
+        <canvas id="carbonChart" class="carbon-canvas"></canvas>
+
+        <button class="btn-reset" id="resetCarbon">↺ Reset counter</button>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
