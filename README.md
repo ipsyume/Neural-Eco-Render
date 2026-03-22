@@ -49,10 +49,11 @@ Then open:
 
 http://127.0.0.1:5000
 
-<img width="1919" height="960" alt="image" src="https://github.com/user-attachments/assets/d377832c-38ef-420b-a94c-85cb51fdc5eb" />
-<img width="1911" height="965" alt="image" src="https://github.com/user-attachments/assets/18982da9-8abc-4592-b7ef-f65acc32365f" />
-<img width="1919" height="888" alt="image" src="https://github.com/user-attachments/assets/887d0674-756a-4936-9921-ae463d993f54" />
-<img width="1444" height="943" alt="image" src="https://github.com/user-attachments/assets/d3b8977d-ceca-435a-9cb1-05140cb21fb0" />
+<img width="1918" height="976" alt="image" src="https://github.com/user-attachments/assets/bdf36bb2-a239-4342-a06c-47de1e26e07e" />
+<img width="1910" height="663" alt="image" src="https://github.com/user-attachments/assets/6da3645d-2f95-4137-b2af-2a58a55b625d" />
+<img width="1625" height="718" alt="image" src="https://github.com/user-attachments/assets/9fb01ff6-c23e-4d56-81b1-f5ea9a1c0b67" />
+
+
 ![demo](https://github.com/user-attachments/assets/6ad3e49c-f1c2-4077-955d-965c1eeb2555)
 
 
